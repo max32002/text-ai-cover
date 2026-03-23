@@ -1,0 +1,46 @@
+{
+  "paths": {
+    "inputDir": "./raw_images",
+    "outputDir": "./final_posts"
+  },
+  "title": "讓 AI 封面圖自動加上中文標題",
+  "align": "center",
+  "fontFamily": [
+    "PingFang TC",
+    "Maruko Gothic CJKjp Medium",
+    "Noto Sans TC",
+    "Source Han Sans TC",
+    "Microsoft JhengHei",
+    "sans-serif"
+  ],
+  "customColors": {
+    "useAutoLuminance": true,
+    "forceTextColor": "#ffffff",
+    "forceShadowColor": "rgba(0,0,0,0.5)"
+  },
+  "layout": {
+    "maxCharsPerLine": 15,
+    "fontSizeRatio": 0.064,
+    "paddingRatio": 0.057,
+    "bold": false,
+    "italic": false,
+    "shadowEnable": true,
+    "shadowOffset": 2,
+    "titleBgEnable": false,
+    "titleBgColor": "#c9c5c5",
+    "titleBgOpacity": 0.29,
+    "titleBgOffsetYRatio": 0,
+    "titleBgPaddingRatio": 0.23,
+    "titleBgRadius": 8
+  },
+  "watermark": {
+    "enable": true,
+    "text": "Max的每一天",
+    "fontSizeRatio": 0.01,
+    "opacity": 0.1,
+    "position": {
+      "right": true,
+      "bottomRatio": 0.9
+    }
+  }
+}

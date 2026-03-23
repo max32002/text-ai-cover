@@ -1,0 +1,16 @@
+{
+  "name": "text-ai-cover",
+  "version": "1.0.0",
+  "description": "自動為 AI 生成圖片加上正體中文標題",
+  "main": "add-text.js",
+  "scripts": {
+    "start": "node add-text.js",
+    "dev": "node --watch add-text.js"
+  },
+  "dependencies": {
+    "sharp": "^0.33.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
