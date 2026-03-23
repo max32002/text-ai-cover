@@ -154,7 +154,11 @@ async function batchProcess() {
 
   const files = fs.readdirSync(inputDir).filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f));
   for (const file of files) {
-    await processSingleImage(path.join(inputDir, file), path.join(outputDir, `covered_${file}`));
+    const ext     = path.extname(file);
+    const base    = path.basename(file, ext);
+    const outExt  = config.forceJpg ? '.jpg' : ext;
+    const outFile = `covered_${base}${outExt}`;
+    await processSingleImage(path.join(inputDir, file), path.join(outputDir, outFile));
   }
 }
 

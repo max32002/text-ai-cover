@@ -1,6 +1,6 @@
 # 🎨 Title on AI Cover
 
-![AI Cover Generator Preview](./preview/text-ai-cover-preview.jpg)
+![Text AI Cover Preview](./preview/text-ai-cover-preview.jpg)
 
 > 自動為 AI 生成的圖片批次加上標題文字與浮水印，支援視覺化設定編輯介面。
 
@@ -22,7 +22,7 @@
 
 ## 🚀 專案簡介
 
-**AI Cover Generator** 是一套專為內容創作者設計的自動化圖文包裝工具。它能解決 AI 生成圖片雖然精美，但往往缺乏標題與品牌識別的問題。
+**Text AI Cover** 是一套專為內容創作者設計的自動化圖文包裝工具。它能解決 AI 生成圖片雖然精美，但往往缺乏標題與品牌識別的問題。
 
 本工具會自動掃描 `raw_images/` 資料夾，為圖片疊加具有設計感的漸層遮罩、標題文字、標題背景塊以及品牌浮水印。它特別適合用於 **YouTube 縮圖、社群貼文封面、部落格文章配圖** 等需要快速大量產出一致性設計的需求。
 
@@ -43,6 +43,8 @@
     - **多行智慧斷行**：獨家字寬計算法（中文1，ASCII 0.55），支援置中、靠左、靠右自動對齊。
 - 🔤 **系統字型列舉**：自動抓取您電腦中已安裝的所有字型，並提供搜尋與即時套用功能。
 - 💧 **品牌保護**：內建浮水印系統，可自由調整位置與透明度，防止作品被隨意盜錄。
+- 🖼️ **強制 JPG 輸出**：內建 `forceJpg` 開關（預設啟用），可將所有輸出圖片統一轉換為 `.jpg` 格式，停用後則保留原始檔案格式。
+- 🌓 **深色 / 淺色主題切換**：編輯器界面支援一鍵切換深色與淺色主題，適合不同作業環境與個人偏好。
 
 ---
 
@@ -112,9 +114,14 @@ npm run dev
 ### 執行輸出範例
 
 ```
+# forceJpg: true（預設）— 統一輸出為 .jpg
 ✅ 已處理: covered_image01.jpg
-✅ 已處理: covered_image02.png
+✅ 已處理: covered_image02.jpg   ← 原為 .png，轉為 .jpg
 ❌ 錯誤: raw_images/broken.jpg  unsupported image format
+
+# forceJpg: false — 保留原始格式
+✅ 已處理: covered_image01.jpg
+✅ 已處理: covered_image02.png   ← 保留 .png
 ```
 
 ### 文字渲染與繪圖原理
@@ -162,6 +169,12 @@ edit-config.bat
 - 點擊任一字型可**即時預覽**「漢字 Abc 123 いろは」的渲染效果
 - 選取字型後，會自動**覆蓋** `config.fontFamily` 陣列的**第一項**，其餘 Fallback 字型保持不變
 
+#### 中間：👁️ 即時預覽
+
+- **Canvas 畫布**即時顕示標題排版效果，任https修改參數後 **120ms 內自動重繪**
+- 支援多種背景預設：🌑 深色、☀️ 淺色、🌊 藍調、🌿 森林、🌅 落日
+- 顯示即時資訊：字級、行數、邊距、浮水印狀態
+
 #### 右側：⚙️ 參數設定
 
 可直接在表單中修改以下設定：
@@ -192,6 +205,7 @@ edit-config.bat
 | watermark.opacity        | 浮水印透明度（0 ~ 1）                        |
 | watermark.bottomRatio    | 浮水印垂直位置（佔圖片高度比例，從底部算起） |
 | watermark.position.right | 浮水印靠右（true）或靠左（false）            |
+| forceJpg                 | 強制將所有輸出圖片轉換為 `.jpg` 格式（預設開啟） |
 | inputDir                 | 來源圖片資料夾路徑                           |
 | outputDir                | 輸出圖片資料夾路徑                           |
 
@@ -199,12 +213,15 @@ edit-config.bat
 
 點擊右上角 **💾 儲存 config.json** 按鈕，所有變更會立即寫回 `config.json` 檔案。
 
+點擊 **☀️ 淺色模式** / **🌑 深色模式** 可一鍵切換編輯器外觀主題。
+
 ---
 
 ## ⚙️ config.json 參數說明
 
 ```jsonc
 {
+  "forceJpg": true, // true = 所有輸出統一轉為 .jpg；false = 保留原始副檔名
   "paths": {
     "inputDir": "./raw_images", // 原始圖片來源資料夾
     "outputDir": "./final_posts", // 輸出圖片目標資料夾

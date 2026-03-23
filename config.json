@@ -1,4 +1,5 @@
 {
+  "forceJpg": true,
   "paths": {
     "inputDir": "./raw_images",
     "outputDir": "./final_posts"

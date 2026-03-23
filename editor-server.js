@@ -44,7 +44,7 @@ function buildHTML(config, fonts) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>設定編輯器 — AI Cover Generator</title>
+<title>設定編輯器 — Text AI Cover</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -60,7 +60,7 @@ function buildHTML(config, fonts) {
     --accent3:  #c4b5fd;
     --text:     #e2e8f0;
     --text2:    #a8b3cc;
-    --muted:    #5e6a85;
+    --muted:    #7a8aa8;
     --success:  #10d9a0;
     --error:    #f87171;
     --r:        10px;
@@ -75,8 +75,8 @@ function buildHTML(config, fonts) {
     height: 100vh;
     overflow: hidden;
     display: grid;
-    grid-template-columns: 280px 1fr 400px;
-    grid-template-rows: 58px 1fr;
+    grid-template-columns: 300px 1fr 440px;
+    grid-template-rows: 64px 1fr;
   }
 
   /* ── Header ── */
@@ -118,9 +118,9 @@ function buildHTML(config, fonts) {
 
   /* ── Panels ── */
   .panel {
-    overflow-y: auto; height: calc(100vh - 58px);
-    padding: 16px 18px;
-    display: flex; flex-direction: column; gap: 12px;
+    overflow-y: auto; height: calc(100vh - 64px);
+    padding: 20px 20px;
+    display: flex; flex-direction: column; gap: 14px;
   }
   .panel::-webkit-scrollbar { width: 4px; }
   .panel::-webkit-scrollbar-track { background: transparent; }
@@ -131,8 +131,8 @@ function buildHTML(config, fonts) {
   .preview-panel {
     background: #0a0c15;
     display: flex; flex-direction: column; align-items: center;
-    gap: 12px; overflow-y: auto; height: calc(100vh - 58px);
-    padding: 20px 18px;
+    gap: 16px; overflow-y: auto; height: calc(100vh - 64px);
+    padding: 24px 20px;
   }
   .preview-panel::-webkit-scrollbar { width: 4px; }
   .preview-panel::-webkit-scrollbar-track { background: transparent; }
@@ -140,7 +140,7 @@ function buildHTML(config, fonts) {
 
   /* ── Preview ── */
   .preview-title {
-    font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+    font-size: 11px; font-weight: 700; letter-spacing: 1.2px;
     text-transform: uppercase; color: var(--muted);
     align-self: flex-start;
   }
@@ -175,26 +175,26 @@ function buildHTML(config, fonts) {
   }
   .info-card {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--r-sm); padding: 10px 12px;
-    display: flex; flex-direction: column; gap: 3px;
+    border-radius: var(--r-sm); padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 5px;
   }
-  .info-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
-  .info-value { font-size: 13px; font-weight: 600; color: var(--accent3); font-family: 'Consolas', monospace; }
+  .info-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+  .info-value { font-size: 14px; font-weight: 600; color: var(--accent3); font-family: 'Consolas', monospace; }
 
   /* ── Font panel widgets ── */
   .font-count-row { display: flex; align-items: center; justify-content: space-between; }
-  .badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: rgba(108,99,255,.15); color: var(--accent2); }
-  .hint-sm { font-size: 11px; color: var(--muted); }
+  .badge { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: rgba(108,99,255,.15); color: var(--accent2); }
+  .hint-sm { font-size: 12px; color: var(--muted); }
 
   .selected-box {
     background: linear-gradient(135deg,rgba(108,99,255,.07),rgba(167,139,250,.04));
     border: 1.5px solid rgba(108,99,255,.3); border-radius: var(--r);
     padding: 12px 14px; display: flex; flex-direction: column; gap: 7px;
   }
-  .selected-label  { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; }
-  .selected-name   { font-size: 15px; font-weight: 700; color: var(--accent3); word-break: break-all; min-height: 21px; }
-  .selected-prev   { font-size: 20px; border-top: 1px solid var(--border); padding-top: 8px; transition: font-family .25s; line-height: 1.4; }
-  .selected-hint   { font-size: 11px; color: var(--muted); }
+  .selected-label  { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; }
+  .selected-name   { font-size: 16px; font-weight: 700; color: var(--accent3); word-break: break-all; min-height: 22px; }
+  .selected-prev   { font-size: 22px; border-top: 1px solid var(--border); padding-top: 10px; transition: font-family .25s; line-height: 1.4; }
+  .selected-hint   { font-size: 12px; color: var(--muted); }
 
   .search-wrap { position: relative; }
   .search-wrap input {
@@ -215,51 +215,51 @@ function buildHTML(config, fonts) {
   .font-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
 
   .font-item {
-    padding: 8px 10px; border-radius: var(--r-sm); cursor: pointer;
+    padding: 10px 12px; border-radius: var(--r-sm); cursor: pointer;
     display: flex; justify-content: space-between; align-items: center;
     transition: background .1s; border: 1px solid transparent; user-select: none;
   }
   .font-item:hover { background: var(--surface2); }
   .font-item.active { background: rgba(108,99,255,.11); border-color: rgba(108,99,255,.32); }
   .font-name       { font-size: 13px; font-weight: 500; }
-  .font-preview-sm { font-size: 11.5px; color: var(--text2); margin-top: 2px; opacity: .8; }
-  .font-check      { color: var(--accent2); font-size: 13px; flex-shrink: 0; margin-left: 8px; }
+  .font-preview-sm { font-size: 12px; color: var(--text2); margin-top: 3px; opacity: .85; }
+  .font-check      { color: var(--accent2); font-size: 14px; flex-shrink: 0; margin-left: 8px; }
 
   /* ── Config form ── */
   .section-title {
-    font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+    font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
     color: var(--muted); display: flex; align-items: center; gap: 8px;
   }
   .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
 
   .field-group {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--r); padding: 13px 15px;
-    display: flex; flex-direction: column; gap: 12px;
+    border-radius: var(--r); padding: 16px 18px;
+    display: flex; flex-direction: column; gap: 14px;
     transition: border-color .18s;
   }
   .field-group:focus-within { border-color: var(--border2); }
 
   .group-header {
-    display: flex; align-items: center; gap: 7px;
-    padding-bottom: 9px; border-bottom: 1px solid var(--border); margin-bottom: -2px;
+    display: flex; align-items: center; gap: 8px;
+    padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: -2px;
   }
-  .group-icon  { font-size: 14px; }
-  .group-label { font-size: 13px; font-weight: 700; }
-  .group-key   { font-size: 10px; font-family: 'Consolas',monospace; color: var(--muted); margin-left: auto; background: var(--surface2); padding: 2px 6px; border-radius: 4px; }
+  .group-icon  { font-size: 16px; }
+  .group-label { font-size: 14px; font-weight: 700; }
+  .group-key   { font-size: 11px; font-family: 'Consolas',monospace; color: var(--muted); margin-left: auto; background: var(--surface2); padding: 3px 7px; border-radius: 4px; }
 
-  .field-row { display: flex; flex-direction: column; gap: 4px; }
-  .divider   { height: 1px; background: var(--border); }
+  .field-row { display: flex; flex-direction: column; gap: 6px; }
+  .divider   { height: 1px; background: var(--border); margin: 2px 0; }
 
-  .field-label { font-size: 12px; font-weight: 600; color: var(--text2); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .field-label { font-size: 13px; font-weight: 600; color: var(--text2); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .field-label .zh  { color: var(--text); }
-  .field-label .key { font-size: 10px; font-family: 'Consolas',monospace; color: var(--muted); background: var(--surface3); padding: 1px 5px; border-radius: 3px; }
-  .field-hint { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .field-label .key { font-size: 11px; font-family: 'Consolas',monospace; color: var(--muted); background: var(--surface3); padding: 2px 6px; border-radius: 3px; }
+  .field-hint { font-size: 12px; color: var(--muted); line-height: 1.6; }
 
   .field-input {
     background: var(--surface2); border: 1px solid var(--border);
-    border-radius: var(--r-sm); color: var(--text); font-size: 13px;
-    padding: 7px 10px; outline: none; transition: border-color .18s, background .18s;
+    border-radius: var(--r-sm); color: var(--text); font-size: 14px;
+    padding: 8px 11px; outline: none; transition: border-color .18s, background .18s;
     width: 100%; font-family: inherit;
   }
   .field-input:focus { border-color: var(--accent); background: var(--surface3); }
@@ -267,21 +267,21 @@ function buildHTML(config, fonts) {
   select.field-input option { background: var(--surface2); }
 
   /* slider */
-  .slider-row { display: grid; grid-template-columns: 1fr 60px; gap: 8px; align-items: center; }
+  .slider-row { display: grid; grid-template-columns: 1fr 68px; gap: 8px; align-items: center; }
   input[type="range"] {
-    -webkit-appearance: none; width: 100%; height: 4px;
+    -webkit-appearance: none; width: 100%; height: 5px;
     background: var(--surface3); border-radius: 99px; outline: none; cursor: pointer;
   }
   input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
-    background: var(--accent); cursor: pointer; box-shadow: 0 0 5px rgba(108,99,255,.5);
+    -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent); cursor: pointer; box-shadow: 0 0 6px rgba(108,99,255,.6);
     transition: transform .15s;
   }
-  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.25); }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
   .slider-row input[type="number"] {
     background: var(--surface2); border: 1px solid var(--border);
-    border-radius: var(--r-sm); color: var(--text); font-size: 12px;
-    padding: 6px 6px; text-align: center; outline: none; width: 100%;
+    border-radius: var(--r-sm); color: var(--text); font-size: 13px;
+    padding: 7px 4px; text-align: center; outline: none; width: 100%;
     font-family: 'Consolas',monospace; transition: border-color .18s;
   }
   .slider-row input[type="number"]:focus { border-color: var(--accent); }
@@ -312,7 +312,7 @@ function buildHTML(config, fonts) {
     transition: left .18s; box-shadow: 0 1px 4px rgba(0,0,0,.4);
   }
   .toggle:checked::after { left: 18px; }
-  .toggle-state { font-size: 12px; color: var(--muted); min-width: 22px; text-align: center; }
+  .toggle-state { font-size: 13px; color: var(--text2); min-width: 30px; text-align: center; font-weight: 500; }
 
   /* fontFamily display */
   .ff-display {
@@ -339,6 +339,39 @@ function buildHTML(config, fonts) {
   }
   #toast.show  { opacity: 1; transform: translateX(-50%) translateY(0); }
   #toast.error { background: var(--error); color: #fff; }
+
+  /* ── Light theme ── */
+  body.light {
+    --bg:       #f0f2f8;
+    --surface:  #ffffff;
+    --surface2: #e8eaf2;
+    --surface3: #dde0ed;
+    --border:   #cdd1e3;
+    --border2:  #b8bdd4;
+    --text:     #1a1d2e;
+    --text2:    #4a5272;
+    --muted:    #7278a0;
+  }
+  body.light header {
+    background: linear-gradient(90deg,#e8eaf2,#f0f2f8);
+  }
+  body.light .preview-panel {
+    background: #e4e6f0;
+  }
+  body.light .config-panel {
+    background: #eceef6;
+  }
+
+  /* theme-btn */
+  .theme-btn {
+    padding: 8px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border); border-radius: var(--r-sm);
+    color: var(--text2); font-size: 14px; font-family: inherit;
+    cursor: pointer; transition: all .18s; line-height: 1;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .theme-btn:hover { background: var(--surface3); color: var(--text); border-color: var(--border2); }
 </style>
 </head>
 <body>
@@ -348,11 +381,12 @@ function buildHTML(config, fonts) {
   <div class="logo">
     <div class="logo-icon">🎨</div>
     <div>
-      <div class="logo-title">AI Cover Generator</div>
+      <div class="logo-title">Text AI Cover</div>
       <div class="logo-sub">視覺化設定編輯器</div>
     </div>
   </div>
   <div class="header-actions" style="display:flex;gap:10px">
+    <button class="theme-btn" id="theme-toggle-btn" onclick="toggleTheme()">☀️ 淺色模式</button>
     <button class="reload-btn" onclick="reloadConfig()">⏳ 重設設定</button>
     <button class="save-btn" onclick="saveConfig()">💾 儲存 config.json</button>
   </div>
@@ -691,6 +725,25 @@ function buildHTML(config, fonts) {
     </div>
   </div>
 
+  <!-- Output Format -->
+  <div class="field-group">
+    <div class="group-header">
+      <span class="group-icon">🖼️</span><span class="group-label">輸出格式</span><span class="group-key">forceJpg</span>
+    </div>
+    <div class="field-row">
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="field-label"><span class="zh">強制轉換為 JPG 格式</span><span class="key">forceJpg</span></div>
+          <div class="field-hint">✦ 啟用後所有輸出圖片統一轉為 .jpg，停用則保留原始格式</div>
+        </div>
+        <div class="toggle-wrap">
+          <input class="toggle" type="checkbox" id="f-forceJpg" onchange="syncToggle('f-forceJpg','forceJpgLabel','強制 JPG','原始格式')" />
+          <span class="toggle-state" id="forceJpgLabel">強制 JPG</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Paths -->
   <div class="field-group">
     <div class="group-header">
@@ -729,6 +782,11 @@ let previewTimer = null;
 // ══════════════════════════════════════════════════════════════════════════════
 function syncVal(id, v) { const e = document.getElementById(id); if (e) e.value = v; }
 function syncColorPicker(id, hex) { if (/^#[0-9a-fA-F]{6}$/.test(hex)) { const e = document.getElementById(id); if (e) e.value = hex; } }
+
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  document.getElementById('theme-toggle-btn').textContent = isLight ? '🌑 深色模式' : '☀️ 淺色模式';
+}
 function syncToggle(id, labelId, on, off) {
   document.getElementById(labelId).textContent = document.getElementById(id).checked ? on : off;
 }
@@ -818,6 +876,9 @@ function populateFields() {
 
   v('f-inputDir').value  = config.paths?.inputDir  || './raw_images';
   v('f-outputDir').value = config.paths?.outputDir || './final_posts';
+
+  v('f-forceJpg').checked = config.forceJpg ?? true;
+  syncToggle('f-forceJpg', 'forceJpgLabel', '強制 JPG', '原始格式');
 
   updateFFDisplay();
 }
@@ -1076,6 +1137,7 @@ function selectFont(name) {
 // ══════════════════════════════════════════════════════════════════════════════
 function buildConfig() {
   return {
+    forceJpg: v('f-forceJpg').checked,
     paths: {
       inputDir:  v('f-inputDir').value,
       outputDir: v('f-outputDir').value
