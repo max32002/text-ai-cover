@@ -149,8 +149,14 @@ async function processSingleImage(inputPath, outputPath) {
 /** 批次處理主程式 **/
 async function batchProcess() {
   const { inputDir, outputDir } = config.paths;
-  if (!fs.existsSync(inputDir)) return console.error(`❌ 找不到輸入資料夾: ${inputDir}`);
-  if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+  if (!fs.existsSync(inputDir)) {
+    fs.mkdirSync(inputDir, { recursive: true });
+    console.log(`📁 已自動建立輸入資料夾：${inputDir}`);
+  }
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+    console.log(`📁 已自動建立輸出資料夾：${outputDir}`);
+  }
 
   const files = fs.readdirSync(inputDir).filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f));
   for (const file of files) {

@@ -168,18 +168,36 @@ function buildHTML(config, fonts) {
   }
   .bg-btn:hover, .bg-btn.active { background: var(--surface3); color: var(--text); border-color: var(--accent); }
 
+  .download-btn {
+    width: 100%;
+    padding: 9px 0;
+    border-radius: var(--r-sm);
+    border: 1px solid var(--border2);
+    background: linear-gradient(135deg, rgba(108,99,255,.12), rgba(167,139,250,.08));
+    color: var(--accent3); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all .18s; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .download-btn:hover {
+    background: linear-gradient(135deg, rgba(108,99,255,.25), rgba(167,139,250,.18));
+    border-color: var(--accent); color: #fff;
+    box-shadow: 0 2px 12px rgba(108,99,255,.3);
+    transform: translateY(-1px);
+  }
+  .download-btn:active { transform: translateY(0); }
+
   .preview-info {
     width: 100%;
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    display: flex; gap: 6px;
   }
   .info-card {
+    flex: 1;
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--r-sm); padding: 12px 14px;
-    display: flex; flex-direction: column; gap: 5px;
+    border-radius: var(--r-sm); padding: 7px 10px;
+    display: flex; flex-direction: column; gap: 2px; align-items: center;
   }
-  .info-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
-  .info-value { font-size: 14px; font-weight: 600; color: var(--accent3); font-family: 'Consolas', monospace; }
+  .info-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
+  .info-value { font-size: 13px; font-weight: 700; color: var(--accent3); font-family: 'Consolas', monospace; white-space: nowrap; }
 
   /* ── Font panel widgets ── */
   .font-count-row { display: flex; align-items: center; justify-content: space-between; }
@@ -434,7 +452,12 @@ function buildHTML(config, fonts) {
     <button class="bg-btn"        onclick="setBg('blue')"    id="bg-blue">🌊 藍調</button>
     <button class="bg-btn"        onclick="setBg('forest')"  id="bg-forest">🌿 森林</button>
     <button class="bg-btn"        onclick="setBg('sunset')"  id="bg-sunset">🌅 落日</button>
+    <button class="bg-btn"        onclick="setBg('raw')"     id="bg-raw" style="display:none">🖼️ 預覽圖片</button>
   </div>
+
+  <button class="download-btn" onclick="downloadPreview()" id="btn-download">
+    ⬇️ 下載預覽圖
+  </button>
 
   <div class="preview-info">
     <div class="info-card">
@@ -776,6 +799,8 @@ let allFonts   = ${fontsJson};
 let selectedFont = null;
 let currentBg  = 'dark';
 let previewTimer = null;
+let rawImgCache  = null;
+let isRawImgLoading = false;
 
 // ══════════════════════════════════════════════════════════════════════════════
 //  Tiny helpers
@@ -803,7 +828,18 @@ function init() {
   populateFields();
   renderFontList(allFonts);
   v('font-count').textContent = allFonts.length + ' 個字型';
-  renderPreview();
+
+  // 客戶端偵測是否有原始圖片（不依賴伺服器變數）
+  fetch('/preview-image', { method: 'HEAD' })
+    .then(r => {
+      if (r.ok) {
+        v('bg-raw').style.display = 'inline-block';
+        setBg('raw');
+      } else {
+        renderPreview();
+      }
+    })
+    .catch(() => renderPreview());
 }
 
 function populateFields() {
@@ -906,7 +942,30 @@ function setBg(name) {
   currentBg = name;
   document.querySelectorAll('.bg-btn').forEach(b => b.classList.remove('active'));
   v('bg-' + name)?.classList.add('active');
-  renderPreview();
+  if (name === 'raw' && !rawImgCache) {
+    loadRawImage();
+  } else {
+    renderPreview();
+  }
+}
+
+function loadRawImage() {
+  if (isRawImgLoading) return;
+  isRawImgLoading = true;
+  const img = new Image();
+  img.src = '/preview-image?t=' + Date.now();
+  img.onload = () => { rawImgCache = img; isRawImgLoading = false; renderPreview(); };
+  img.onerror = () => { isRawImgLoading = false; showToast('❌ 無法載入原始圖片', true); setBg('dark'); };
+}
+
+function downloadPreview() {
+  const canvas = v('previewCanvas');
+  const title  = (v('f-title').value || 'preview').replace(/[\\/:*?"<>|]/g, '_').trim() || 'preview';
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = title + '.png';
+  a.click();
+  showToast('✅ 圖片已下載！', false);
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -985,12 +1044,21 @@ function renderPreview() {
   }
 
   // ── 1. Background ─────────────────────────────────────────────────────────
-  const stops = BG_PRESETS[currentBg] || BG_PRESETS.dark;
-  const bgGrad = ctx.createLinearGradient(0, 0, W, H);
-  bgGrad.addColorStop(0, stops[0][0]);
-  bgGrad.addColorStop(1, stops[0][1]);
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, W, H);
+  if (currentBg === 'raw' && rawImgCache) {
+    const ia = rawImgCache.width / rawImgCache.height, ca = W / H;
+    let dw, dh, dx, dy;
+    if (ia > ca) { dh = H; dw = H * ia; dx = (W - dw) / 2; dy = 0; }
+    else         { dw = W; dh = W / ia; dx = 0; dy = (H - dh) / 2; }
+    ctx.drawImage(rawImgCache, dx, dy, dw, dh);
+    ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.fillRect(0, 0, W, H);
+  } else {
+    const stops = BG_PRESETS[currentBg] || BG_PRESETS.dark;
+    const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+    bgGrad.addColorStop(0, stops[0][0]);
+    bgGrad.addColorStop(1, stops[0][1]);
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
+  }
 
   // subtle noise dots for texture
   ctx.save();
@@ -1253,6 +1321,19 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ ok: false, error: e.message }));
       }
     });
+  } else if ((req.method === 'GET' || req.method === 'HEAD') && (req.url === '/preview-image' || req.url.startsWith('/preview-image?'))) {
+    try {
+      const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+      const inputDir = path.resolve(__dirname, config.paths?.inputDir || './raw_images');
+      const files = fs.readdirSync(inputDir).filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f));
+      if (files.length === 0) { res.writeHead(404); return res.end('Not found'); }
+      const imgPath = path.join(inputDir, files[0]);
+      const ext = path.extname(imgPath).slice(1).toLowerCase();
+      const mime = { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', webp:'image/webp' }[ext] || 'application/octet-stream';
+      res.writeHead(200, { 'Content-Type': mime });
+      if (req.method === 'HEAD') return res.end();
+      fs.createReadStream(imgPath).pipe(res);
+    } catch(e) { res.writeHead(500); res.end(e.message); }
   } else {
     res.writeHead(404);
     res.end('Not found');
