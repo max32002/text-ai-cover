@@ -6,7 +6,7 @@
 
 使用方法：
 
-* 是先透過 AI 生圖，生好的圖放到 raw_images 目錄下 ([AI 生圖提示詞的參考](https://github.com/max32002/text-ai-cover?tab=readme-ov-file#-gemini-%E7%94%9F%E5%9C%96%E6%8F%90%E7%A4%BA%E8%A9%9E%E5%8F%83%E8%80%83)
+* 是先透過 AI 生圖，生好的圖放到 raw_images 目錄下 ([AI 生圖提示詞的參考](https://github.com/max32002/text-ai-cover?tab=readme-ov-file#-gemini-%E7%94%9F%E5%9C%96%E6%8F%90%E7%A4%BA%E8%A9%9E%E5%8F%83%E8%80%83))
 * 如果是要批次修改整個目錄下的圖片，可以修改 config.json ，設定放到圖片上的標題之後, 執行 run.bat 即可在 final_posts 目錄取得所有圖片套用標題的成品, 
 * 如果是 raw_images 目錄下只有一張圖的話，執行 edit-config.bat 或是執行 node editor-server.js 就可以開啟網頁版本的視覺化設定編輯介面，即時直接預覽圖片套用標題的結果，最後可以在瀏覽器直接下載調整的結果。
 
