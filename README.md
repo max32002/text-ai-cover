@@ -1,6 +1,6 @@
-# 🎨 Title on AI Cover
+# 🎨 Text AI Cover
 
-![Text AI Cover Preview](./preview/text-ai-cover-preview.jpg)
+![Text AI Cover Preview](./preview/ai-cover-generator-preview.jpg)
 
 > 自動為 AI 生成的圖片批次加上標題文字與浮水印，支援視覺化設定編輯介面。
 
