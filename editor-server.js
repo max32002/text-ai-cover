@@ -8,6 +8,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const sharp = require('sharp');
 
 const PORT = 3737;
 const CONFIG_PATH = path.join(__dirname, 'config.json');
@@ -809,6 +810,7 @@ let selectedFont = null;
 let currentBg  = 'dark';
 let previewTimer = null;
 let rawImgCache  = null;
+let rawImgIsDark = null;
 let isRawImgLoading = false;
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -968,20 +970,32 @@ function setBg(name) {
 function loadRawImage() {
   if (isRawImgLoading) return;
   isRawImgLoading = true;
-  const img = new Image();
-  img.src = '/preview-image?t=' + Date.now();
-  img.onload = () => {
-    rawImgCache = img;
-    isRawImgLoading = false;
-    // auto-fit canvas to the image's actual aspect ratio
-    const canvas = v('previewCanvas');
-    const W = 1200;
-    canvas.width  = W;
-    canvas.height = Math.round(W * img.height / img.width);
-    fitCanvas();
-    renderPreview();
-  };
-  img.onerror = () => { isRawImgLoading = false; showToast('❌ 無法載入原始圖片', true); setBg('dark'); };
+
+  const lumPromise = fetch('/image-luminance')
+    .then(r => r.json())
+    .then(d => { rawImgIsDark = d.isDark ?? null; })
+    .catch(() => { rawImgIsDark = null; });
+
+  const imgPromise = new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload  = () => resolve(img);
+    img.onerror = reject;
+    img.src = '/preview-image?t=' + Date.now();
+  });
+
+  Promise.all([lumPromise, imgPromise])
+    .then(([, img]) => {
+      rawImgCache = img;
+      isRawImgLoading = false;
+      const canvas = v('previewCanvas');
+      const W = 1200;
+      canvas.width  = W;
+      canvas.height = Math.round(W * img.height / img.width);
+      fitCanvas();
+      renderPreview();
+    })
+    .catch(() => { isRawImgLoading = false; showToast('❌ 無法載入原始圖片', true); setBg('dark'); });
 }
 
 function downloadPreview() {
@@ -1074,8 +1088,10 @@ function renderPreview() {
   const lineHeight = fontSize * 1.4;
   const lines      = wrapText(title, maxChars);
 
-  // ── determine isDark from background preset ───────────────────────────────
-  const isDark = (currentBg !== 'light');
+  // ── determine isDark from background preset or raw image luminance ──────────
+  const isDark = (currentBg === 'raw' && rawImgIsDark !== null)
+    ? rawImgIsDark
+    : (currentBg !== 'light');
 
   let textColor, shadowColor, gradColor, gradOpacity;
   if (autoLum) {
@@ -1097,7 +1113,6 @@ function renderPreview() {
     if (ia > ca) { dh = H; dw = H * ia; dx = (W - dw) / 2; dy = 0; }
     else         { dw = W; dh = W / ia; dx = 0; dy = (H - dh) / 2; }
     ctx.drawImage(rawImgCache, dx, dy, dw, dh);
-    ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.fillRect(0, 0, W, H);
   } else {
     const stops = BG_PRESETS[currentBg] || BG_PRESETS.dark;
     const bgGrad = ctx.createLinearGradient(0, 0, W, H);
@@ -1117,17 +1132,7 @@ function renderPreview() {
   }
   ctx.restore();
 
-  // ── 2. Gradient overlay (bottom 40%) ─────────────────────────────────────
-  const gradY  = H * 0.6;
-  const overlay = ctx.createLinearGradient(0, gradY, 0, H);
-  overlay.addColorStop(0,   \`\${gradColor === 'black' ? 'rgba(0,0,0,0)' : 'rgba(255,255,255,0)'}\`);
-  overlay.addColorStop(1,   gradColor === 'black'
-    ? \`rgba(0,0,0,\${gradOpacity})\`
-    : \`rgba(255,255,255,\${gradOpacity})\`);
-  ctx.fillStyle = overlay;
-  ctx.fillRect(0, gradY, W, H - gradY);
-
-  // ── 3. Alignment & Font ──────────────────────────────────────────────────
+  // ── 2. Alignment & Font ──────────────────────────────────────────────────
   let xPos;
   if (align === 'center')      { ctx.textAlign = 'center'; xPos = W / 2; }
   else if (align === 'right')  { ctx.textAlign = 'right';  xPos = W - padding; }
@@ -1330,7 +1335,7 @@ init();
 }
 
 // ── HTTP Server ──────────────────────────────────────────────────────────────
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && req.url === '/') {
     try {
       const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
@@ -1378,10 +1383,23 @@ const server = http.createServer((req, res) => {
       const imgPath = path.join(inputDir, files[0]);
       const ext = path.extname(imgPath).slice(1).toLowerCase();
       const mime = { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', webp:'image/webp' }[ext] || 'application/octet-stream';
-      res.writeHead(200, { 'Content-Type': mime });
+      res.writeHead(200, { 'Content-Type': mime, 'Access-Control-Allow-Origin': '*' });
       if (req.method === 'HEAD') return res.end();
       fs.createReadStream(imgPath).pipe(res);
     } catch(e) { res.writeHead(500); res.end(e.message); }
+  } else if (req.method === 'GET' && req.url === '/image-luminance') {
+    try {
+      const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+      const inputDir = path.resolve(__dirname, config.paths?.inputDir || './raw_images');
+      const files = fs.readdirSync(inputDir).filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f));
+      if (files.length === 0) { res.writeHead(404); return res.end('{}'); }
+      const imgPath = path.join(inputDir, files[0]);
+      const { data } = await sharp(imgPath).resize(1, 1).raw().toBuffer({ resolveWithObject: true });
+      const [r, g, b] = data;
+      const isDark = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ isDark }));
+    } catch(e) { res.writeHead(500); res.end(JSON.stringify({ error: e.message })); }
   } else {
     res.writeHead(404);
     res.end('Not found');
