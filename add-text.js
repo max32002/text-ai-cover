@@ -139,7 +139,10 @@ async function processSingleImage(inputPath, outputPath) {
       ${watermarkContent}
     </svg>`;
 
-    await image.composite([{ input: Buffer.from(svg.trim()) }]).toFile(outputPath);
+    const quality = config.jpegQuality ?? 92;
+    const isJpg   = /\.(jpg|jpeg)$/i.test(outputPath);
+    const pipeline = image.composite([{ input: Buffer.from(svg.trim()) }]);
+    await (isJpg ? pipeline.jpeg({ quality }) : pipeline).toFile(outputPath);
     console.log(`✅ 已處理: ${path.basename(outputPath)}`);
   } catch (err) {
     console.error(`❌ 錯誤: ${inputPath}`, err.message);

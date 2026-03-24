@@ -1,5 +1,6 @@
 {
   "forceJpg": true,
+  "jpegQuality": 90,
   "paths": {
     "inputDir": "./raw_images",
     "outputDir": "./final_posts"
@@ -20,13 +21,13 @@
     "forceShadowColor": "rgba(0,0,0,0.5)"
   },
   "layout": {
-    "maxCharsPerLine": 15,
-    "fontSizeRatio": 0.064,
+    "maxCharsPerLine": 25,
+    "fontSizeRatio": 0.061,
     "paddingRatio": 0.057,
     "bold": false,
     "italic": false,
     "shadowEnable": true,
-    "shadowOffset": 2,
+    "shadowOffset": 3,
     "titleBgEnable": false,
     "titleBgColor": "#c9c5c5",
     "titleBgOpacity": 0.29,

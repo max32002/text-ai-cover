@@ -765,6 +765,15 @@ function buildHTML(config, fonts) {
         </div>
       </div>
     </div>
+    <div class="divider"></div>
+    <div class="field-row">
+      <div class="field-label"><span class="zh">JPEG 輸出品質</span><span class="key">jpegQuality</span></div>
+      <div class="range-row">
+        <input type="range"  id="f-jq-s" min="1" max="100" step="1" oninput="syncVal('f-jq',this.value)" />
+        <input type="number" id="f-jq"   min="1" max="100" step="1" oninput="syncVal('f-jq-s',this.value)" />
+      </div>
+      <div class="field-hint">✦ 僅在輸出 JPG 時生效，預設 92（1 = 最低，100 = 最高）</div>
+    </div>
   </div>
 
   <!-- Paths -->
@@ -920,6 +929,8 @@ function populateFields() {
 
   v('f-forceJpg').checked = config.forceJpg ?? true;
   syncToggle('f-forceJpg', 'forceJpgLabel', '強制 JPG', '原始格式');
+  const jq = config.jpegQuality ?? 92;
+  syncVal('f-jq', jq); syncVal('f-jq-s', jq);
 
   updateFFDisplay();
 }
@@ -977,10 +988,11 @@ function downloadPreview() {
   const canvas  = v('previewCanvas');
   const title   = (v('f-title').value || 'preview').replace(/[\\/:*?"<>|]/g, '_').trim() || 'preview';
   const isJpg   = v('f-forceJpg').checked;
+  const quality = parseInt(v('f-jq').value, 10) / 100 || 0.92;
   const mime    = isJpg ? 'image/jpeg' : 'image/png';
   const ext     = isJpg ? '.jpg' : '.png';
   const a = document.createElement('a');
-  a.href = canvas.toDataURL(mime, isJpg ? 0.95 : 1);
+  a.href = canvas.toDataURL(mime, isJpg ? quality : 1);
   a.download = title + ext;
   a.click();
   showToast('✅ 圖片已下載！', false);
@@ -1240,7 +1252,8 @@ function selectFont(name) {
 // ══════════════════════════════════════════════════════════════════════════════
 function buildConfig() {
   return {
-    forceJpg: v('f-forceJpg').checked,
+    forceJpg:    v('f-forceJpg').checked,
+    jpegQuality: parseInt(v('f-jq').value, 10) || 92,
     paths: {
       inputDir:  v('f-inputDir').value,
       outputDir: v('f-outputDir').value
