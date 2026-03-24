@@ -314,8 +314,8 @@ text-ai-cover/
 Please create an image of [主題內容]. Important constraints:
 1. The bottom 25% of the image should be relatively simple for text overlay.
 2. NO TEXT, NO SYMBOLS, NO LETTERS, NO NUMBERS should appear in the image.
-3. Studio Ghibli style.
-4. 圖片比例: 16:9
+3. 圖片比例: 16:9
+4. Studio Ghibli style.
 ```
 
 ### 底部留白比例心得
@@ -330,7 +330,7 @@ Please create an image of [主題內容]. Important constraints:
 
 ### 風格替換建議
 
-吉卜力式溫暖氛圍跟很多主題無關聯，硬加上 `Studio Ghibli` 反而完全失去主題。改用 `Lighting composition` 反而會讓畫面更好看。
+吉卜力式溫暖氛圍跟很多主題無關聯，硬加上 `Studio Ghibli` 反而完全失去主題。改用 `Lighting composition` 反而會讓畫面更好看。更多的情況下是只需要使用前三點即可，不需要使用太多提示詞。
 
 ### 常用風格與質感提示詞
 

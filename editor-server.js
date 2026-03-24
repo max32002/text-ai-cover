@@ -145,13 +145,13 @@ function buildHTML(config, fonts) {
     align-self: flex-start;
   }
   .canvas-wrap {
-    width: 100%; position: relative;
+    width: 100%; position: relative; flex-shrink: 0;
     border-radius: var(--r);
     overflow: hidden;
     box-shadow: 0 8px 40px rgba(0,0,0,.6);
     border: 1px solid var(--border2);
   }
-  #previewCanvas { display: block; width: 100%; height: auto; }
+  #previewCanvas { display: block; margin: 0 auto; }
 
   .preview-bg-row {
     width: 100%;
@@ -829,6 +829,11 @@ function init() {
   renderFontList(allFonts);
   v('font-count').textContent = allFonts.length + ' 個字型';
 
+  window.addEventListener('resize', () => { fitCanvas(); renderPreview(); });
+
+  // initial fit for default 16:9 canvas
+  requestAnimationFrame(fitCanvas);
+
   // 客戶端偵測是否有原始圖片（不依賴伺服器變數）
   fetch('/preview-image', { method: 'HEAD' })
     .then(r => {
@@ -954,18 +959,48 @@ function loadRawImage() {
   isRawImgLoading = true;
   const img = new Image();
   img.src = '/preview-image?t=' + Date.now();
-  img.onload = () => { rawImgCache = img; isRawImgLoading = false; renderPreview(); };
+  img.onload = () => {
+    rawImgCache = img;
+    isRawImgLoading = false;
+    // auto-fit canvas to the image's actual aspect ratio
+    const canvas = v('previewCanvas');
+    const W = 1200;
+    canvas.width  = W;
+    canvas.height = Math.round(W * img.height / img.width);
+    fitCanvas();
+    renderPreview();
+  };
   img.onerror = () => { isRawImgLoading = false; showToast('❌ 無法載入原始圖片', true); setBg('dark'); };
 }
 
 function downloadPreview() {
-  const canvas = v('previewCanvas');
-  const title  = (v('f-title').value || 'preview').replace(/[\\/:*?"<>|]/g, '_').trim() || 'preview';
+  const canvas  = v('previewCanvas');
+  const title   = (v('f-title').value || 'preview').replace(/[\\/:*?"<>|]/g, '_').trim() || 'preview';
+  const isJpg   = v('f-forceJpg').checked;
+  const mime    = isJpg ? 'image/jpeg' : 'image/png';
+  const ext     = isJpg ? '.jpg' : '.png';
   const a = document.createElement('a');
-  a.href = canvas.toDataURL('image/png');
-  a.download = title + '.png';
+  a.href = canvas.toDataURL(mime, isJpg ? 0.95 : 1);
+  a.download = title + ext;
   a.click();
   showToast('✅ 圖片已下載！', false);
+}
+
+function fitCanvas() {
+  const canvas = v('previewCanvas');
+  const wrap   = canvas.parentElement;
+  const availW = wrap.clientWidth || wrap.offsetWidth;
+  if (!availW) return;
+  const maxH   = window.innerHeight - 240;
+  const aspect = canvas.width / canvas.height;
+  let displayW = availW;
+  let displayH = availW / aspect;
+  if (displayH > maxH) {
+    displayH = maxH;
+    displayW = maxH * aspect;
+  }
+  canvas.style.width  = Math.round(displayW) + 'px';
+  canvas.style.height = Math.round(displayH) + 'px';
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
