@@ -112,10 +112,7 @@ async function processSingleImage(inputPath, outputPath) {
       const wmX = watermark.position.right ? width - padding : padding;
       const wmY = height - (height * watermark.position.bottomRatio);
       const wmAnchor = watermark.position.right ? 'end' : 'start';
-      const wmShadowColor = 'rgba(0,0,0,0.8)'; // 加深陰影對比
-
       watermarkContent = `
-        <text x="${wmX + 1}" y="${wmY + 1}" font-family='${fontStack}' font-size="${wmFontSize}px" fill="${wmShadowColor}" text-anchor="${wmAnchor}">${watermark.text}</text>
         <text x="${wmX}" y="${wmY}" font-family='${fontStack}' font-size="${wmFontSize}px" fill="${textColor}" fill-opacity="${watermark.opacity}" text-anchor="${wmAnchor}">${watermark.text}</text>
       `;
     }

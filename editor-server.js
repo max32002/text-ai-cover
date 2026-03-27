@@ -1193,10 +1193,6 @@ function renderPreview() {
     ctx.textAlign    = wmRight ? 'right' : 'left';
     ctx.textBaseline = 'alphabetic';
 
-    // shadow
-    ctx.fillStyle    = 'rgba(0,0,0,0.8)';
-    ctx.fillText(wmText, wmX + 1, wmY + 1);
-    // main
     ctx.globalAlpha  = wmOpacity;
     ctx.fillStyle    = textColor;
     ctx.fillText(wmText, wmX, wmY);
