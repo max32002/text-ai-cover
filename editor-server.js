@@ -11,7 +11,8 @@ const { execSync } = require('child_process');
 const sharp = require('sharp');
 
 const PORT = 3737;
-const CONFIG_PATH = path.join(__dirname, 'config.json');
+const CONFIG_PATH   = path.join(__dirname, 'config.json');
+const DEFAULT_CONFIG_PATH = path.join(__dirname, 'config.default.json');
 
 // ── 取得系統字型清單 (Windows / macOS / Linux) ──────────────────────────────
 function getSystemFonts() {
@@ -342,9 +343,9 @@ function buildHTML(config, fonts) {
     display: inline-block;
     background: rgba(108,99,255,.1); border: 1px solid rgba(108,99,255,.18);
     border-radius: 4px; padding: 1px 7px; margin: 1px 3px 1px 0;
-    font-size: 11px; color: var(--accent3); font-family: 'Consolas',monospace;
+    font-size: 11px; color: var(--text); font-family: 'Consolas',monospace;
   }
-  .ff-item.primary { background: rgba(108,99,255,.22); border-color: rgba(108,99,255,.45); color: #fff; font-weight: 600; }
+  .ff-item.primary { background: rgba(108,99,255,.22); border-color: rgba(108,99,255,.45); color: var(--text); font-weight: 600; }
 
   /* toast */
   #toast {
@@ -391,9 +392,71 @@ function buildHTML(config, fonts) {
     display: flex; align-items: center; gap: 6px;
   }
   .theme-btn:hover { background: var(--surface3); color: var(--text); border-color: var(--border2); }
+
+  .reset-btn {
+    padding: 8px 15px;
+    background: rgba(248,113,113,.08);
+    border: 1px solid rgba(248,113,113,.3); border-radius: var(--r-sm);
+    color: #f87171; font-size: 13px; font-weight: 500; font-family: inherit;
+    cursor: pointer; transition: all .18s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .reset-btn:hover { background: rgba(248,113,113,.18); border-color: rgba(248,113,113,.6); color: #fca5a5; }
+
+  /* ── Custom Confirm Dialog ── */
+  .cdialog-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .cdialog-overlay.open { opacity: 1; pointer-events: all; }
+  .cdialog {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 14px;
+    padding: 28px 28px 22px;
+    width: 340px; max-width: 90vw;
+    display: flex; flex-direction: column; gap: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.55);
+    transform: translateY(10px) scale(.97);
+    transition: transform .2s, opacity .2s;
+  }
+  .cdialog-overlay.open .cdialog { transform: translateY(0) scale(1); }
+  .cdialog-icon { font-size: 32px; text-align: center; }
+  .cdialog-title { font-size: 16px; font-weight: 700; text-align: center; }
+  .cdialog-msg { font-size: 13px; color: var(--text2); text-align: center; line-height: 1.7; }
+  .cdialog-btns { display: flex; gap: 10px; margin-top: 4px; }
+  .cdialog-btn {
+    flex: 1; padding: 9px 0; border-radius: var(--r-sm);
+    font-size: 14px; font-weight: 600; font-family: inherit;
+    cursor: pointer; transition: all .15s; border: 1px solid transparent;
+  }
+  .cdialog-btn.cancel {
+    background: var(--surface2); border-color: var(--border2); color: var(--text2);
+  }
+  .cdialog-btn.cancel:hover { background: var(--surface3); color: var(--text); }
+  .cdialog-btn.confirm {
+    background: linear-gradient(135deg,#ef4444,#f87171);
+    color: #fff; box-shadow: 0 2px 10px rgba(239,68,68,.35);
+  }
+  .cdialog-btn.confirm:hover { opacity: .88; box-shadow: 0 4px 16px rgba(239,68,68,.5); }
 </style>
 </head>
 <body>
+
+<!-- Custom Confirm Dialog -->
+<div class="cdialog-overlay" id="cdialog-overlay">
+  <div class="cdialog">
+    <div class="cdialog-icon" id="cdialog-icon">⚠️</div>
+    <div class="cdialog-title" id="cdialog-title">確認操作</div>
+    <div class="cdialog-msg"   id="cdialog-msg"></div>
+    <div class="cdialog-btns">
+      <button class="cdialog-btn cancel"  id="cdialog-cancel"  onclick="closeCDialog()">取消</button>
+      <button class="cdialog-btn confirm" id="cdialog-confirm">確定</button>
+    </div>
+  </div>
+</div>
 
 <!-- Header -->
 <header>
@@ -406,7 +469,8 @@ function buildHTML(config, fonts) {
   </div>
   <div class="header-actions" style="display:flex;gap:10px">
     <button class="theme-btn" id="theme-toggle-btn" onclick="toggleTheme()">☀️ 淺色模式</button>
-    <button class="reload-btn" onclick="reloadConfig()">⏳ 重設設定</button>
+    <button class="reset-btn" onclick="resetToDefaults()">🔄 重設為預設值</button>
+    <button class="reload-btn" onclick="reloadConfig()">↩️ 還原已儲存設定</button>
     <button class="save-btn" onclick="saveConfig()">💾 儲存 config.json</button>
   </div>
 </header>
@@ -544,10 +608,10 @@ function buildHTML(config, fonts) {
     <div class="field-row">
       <div class="field-label"><span class="zh">邊距比例</span><span class="key">paddingRatio</span></div>
       <div class="slider-row">
-        <input type="range"  id="f-pr-s" min="0.01" max="0.2" step="0.001" oninput="syncVal('f-pr',this.value);schedulePreview()" />
-        <input type="number" id="f-pr"   min="0.01" max="0.2" step="0.001" oninput="syncVal('f-pr-s',this.value);schedulePreview()" />
+        <input type="range"  id="f-pr-s" min="0.01" max="0.95" step="0.01" oninput="syncVal('f-pr',this.value);schedulePreview()" />
+        <input type="number" id="f-pr"   min="0.01" max="0.95" step="0.01" oninput="syncVal('f-pr-s',this.value);schedulePreview()" />
       </div>
-      <div class="field-hint">✦ 邊距 = 圖片寬 × 比例（建議 0.04～0.10）</div>
+      <div class="field-hint">✦ 邊距 = 圖片寬 × 比例（建議 0.04～0.20）</div>
     </div>
     <div class="divider"></div>
     <div class="field-row">
@@ -593,6 +657,15 @@ function buildHTML(config, fonts) {
         <input type="number" id="f-shOff"   min="0" max="20" step="1" oninput="syncVal('f-shOff-s',this.value);schedulePreview()" />
       </div>
     </div>
+    <div class="divider"></div>
+    <div class="field-row">
+      <div class="field-label"><span class="zh">行高倍數</span><span class="key">lineHeightRatio</span></div>
+      <div class="slider-row">
+        <input type="range"  id="f-lhr-s" min="1.0" max="3.0" step="0.05" oninput="syncVal('f-lhr',this.value);schedulePreview()" />
+        <input type="number" id="f-lhr"   min="1.0" max="3.0" step="0.05" oninput="syncVal('f-lhr-s',this.value);schedulePreview()" />
+      </div>
+      <div class="field-hint">✦ 行高 = 字級 × 倍數（建議 1.2～2.0，預設 1.4）</div>
+    </div>
   </div>
 
   <!-- Title Background -->
@@ -621,11 +694,21 @@ function buildHTML(config, fonts) {
     </div>
     <div class="divider"></div>
     <div class="field-row">
-      <div class="field-label"><span class="zh">背景內距比例</span><span class="key">titleBgPaddingRatio</span></div>
+      <div class="field-label"><span class="zh">背景水平內距比例</span><span class="key">titleBgPaddingXRatio</span></div>
       <div class="slider-row">
-        <input type="range"  id="f-bgp-s" min="0" max="1" step="0.01" oninput="syncVal('f-bgp',this.value);schedulePreview()" />
-        <input type="number" id="f-bgp"   min="0" max="1" step="0.01" oninput="syncVal('f-bgp-s',this.value);schedulePreview()" />
+        <input type="range"  id="f-bgpx-s" min="-0.5" max="1" step="0.01" oninput="syncVal('f-bgpx',this.value);schedulePreview()" />
+        <input type="number" id="f-bgpx"   min="-0.5" max="1" step="0.01" oninput="syncVal('f-bgpx-s',this.value);schedulePreview()" />
       </div>
+      <div class="field-hint">✦ 負值可使背景窄於文字</div>
+    </div>
+    <div class="divider"></div>
+    <div class="field-row">
+      <div class="field-label"><span class="zh">背景垂直內距比例</span><span class="key">titleBgPaddingYRatio</span></div>
+      <div class="slider-row">
+        <input type="range"  id="f-bgpy-s" min="-0.65" max="1" step="0.01" oninput="syncVal('f-bgpy',this.value);schedulePreview()" />
+        <input type="number" id="f-bgpy"   min="-0.65" max="1" step="0.01" oninput="syncVal('f-bgpy-s',this.value);schedulePreview()" />
+      </div>
+      <div class="field-hint">✦ 負值可使背景矮於文字，最小為一條直線</div>
     </div>
     <div class="divider"></div>
     <div class="field-row">
@@ -647,8 +730,8 @@ function buildHTML(config, fonts) {
     <div class="field-row">
       <div class="field-label"><span class="zh">背景垂直微調</span><span class="key">titleBgOffsetYRatio</span></div>
       <div class="slider-row">
-        <input type="range"  id="f-bgoy-s" min="-0.2" max="0.2" step="0.001" oninput="syncVal('f-bgoy',this.value);schedulePreview()" />
-        <input type="number" id="f-bgoy"   min="-0.2" max="0.2" step="0.001" oninput="syncVal('f-bgoy-s',this.value);schedulePreview()" />
+        <input type="range"  id="f-bgoy-s" min="-0.7" max="0.7" step="0.01" oninput="syncVal('f-bgoy',this.value);schedulePreview()" />
+        <input type="number" id="f-bgoy"   min="-0.7" max="0.7" step="0.01" oninput="syncVal('f-bgoy-s',this.value);schedulePreview()" />
       </div>
       <div class="field-hint">✦ 正值背景向上、負值向下</div>
     </div>
@@ -769,7 +852,7 @@ function buildHTML(config, fonts) {
     <div class="divider"></div>
     <div class="field-row">
       <div class="field-label"><span class="zh">JPEG 輸出品質</span><span class="key">jpegQuality</span></div>
-      <div class="range-row">
+      <div class="slider-row">
         <input type="range"  id="f-jq-s" min="1" max="100" step="1" oninput="syncVal('f-jq',this.value)" />
         <input type="number" id="f-jq"   min="1" max="100" step="1" oninput="syncVal('f-jq-s',this.value)" />
       </div>
@@ -881,6 +964,9 @@ function populateFields() {
   syncVal('f-shOff',   config.layout?.shadowOffset ?? 2);
   syncVal('f-shOff-s', config.layout?.shadowOffset ?? 2);
 
+  const lhr = config.layout?.lineHeightRatio ?? 1.4;
+  syncVal('f-lhr', lhr); syncVal('f-lhr-s', lhr);
+
   v('f-bgEnable').checked = config.layout?.titleBgEnable ?? false;
   syncToggle('f-bgEnable', 'bgEnableLabel', '開', '關');
 
@@ -888,8 +974,11 @@ function populateFields() {
   v('f-bgc').value = bgc; 
   if (/^#[0-9a-fA-F]{6}$/.test(bgc)) v('f-bgcPicker').value = bgc;
   
-  const bgp = config.layout?.titleBgPaddingRatio ?? 0.2;
-  syncVal('f-bgp', bgp); syncVal('f-bgp-s', bgp);
+  const bgpx = config.layout?.titleBgPaddingXRatio ?? (config.layout?.titleBgPaddingRatio ?? 0);
+  syncVal('f-bgpx', bgpx); syncVal('f-bgpx-s', bgpx);
+
+  const bgpy = config.layout?.titleBgPaddingYRatio ?? (config.layout?.titleBgPaddingRatio ?? 0);
+  syncVal('f-bgpy', bgpy); syncVal('f-bgpy-s', bgpy);
   
   const bgr = config.layout?.titleBgRadius ?? 8;
   syncVal('f-bgr', bgr); syncVal('f-bgr-s', bgr);
@@ -1066,7 +1155,8 @@ function renderPreview() {
   
   const titleBgEnable  = v('f-bgEnable').checked;
   const titleBgColor   = v('f-bgc').value || 'rgba(0,0,0,0.5)';
-  const titleBgPadRatio = parseFloat(v('f-bgp').value) || 0;
+  const titleBgPadXRatio = parseFloat(v('f-bgpx').value) || 0;
+  const titleBgPadYRatio = parseFloat(v('f-bgpy').value) || 0;
   const titleBgRadius  = parseFloat(v('f-bgr').value) || 0;
   const titleBgOpacity = parseFloat(v('f-bgo').value) || 0;
   const titleBgOffsetY = parseFloat(v('f-bgoy').value) || 0;
@@ -1085,7 +1175,8 @@ function renderPreview() {
   // ── derived values ────────────────────────────────────────────────────────
   const fontSize   = Math.floor(W * fsRatio);
   const padding    = Math.floor(W * padRatio);
-  const lineHeight = fontSize * 1.4;
+  const lhrRatio   = parseFloat(v('f-lhr').value) || 1.4;
+  const lineHeight = fontSize * lhrRatio;
   const lines      = wrapText(title, maxChars);
 
   // ── determine isDark from background preset or raw image luminance ──────────
@@ -1144,7 +1235,8 @@ function renderPreview() {
   ctx.textBaseline = 'alphabetic';
 
   // ── 4. Title Background Rects ─────────────────────────────────────────────
-  const bgPadding = fontSize * titleBgPadRatio;
+  const bgPaddingX = fontSize * titleBgPadXRatio;
+  const bgPaddingY = fontSize * titleBgPadYRatio;
 
   if (titleBgEnable) {
     ctx.save();
@@ -1152,16 +1244,17 @@ function renderPreview() {
     ctx.fillStyle = titleBgColor;
     lines.forEach((line, i) => {
       const lineW = ctx.measureText(line).width;
-      const rectW = lineW + bgPadding * 2;
-      const rectH = fontSize * 1.35 + bgPadding * 2;
+      const rectW = Math.max(1, lineW + bgPaddingX * 2);
+      const baseRectH = fontSize * 1.35;
+      const rectH = Math.max(1, baseRectH + bgPaddingY * 2);
       
       let rectX;
-      if (align === 'center')      rectX = W/2 - lineW/2 - bgPadding;
-      else if (align === 'right')  rectX = W - padding - lineW - bgPadding;
-      else                         rectX = padding - bgPadding;
+      if (align === 'center')      rectX = W/2 - lineW/2 - bgPaddingX;
+      else if (align === 'right')  rectX = W - padding - lineW - bgPaddingX;
+      else                         rectX = padding - bgPaddingX;
       
       const yPos = H - padding - (lines.length - 1 - i) * lineHeight;
-      const rectY = yPos - fontSize * (1.07 + titleBgOffsetY) - bgPadding;
+      const rectY = yPos - fontSize * (1.07 + titleBgOffsetY) - bgPaddingY;
       
       // Draw rounded rect
       ctx.beginPath();
@@ -1275,11 +1368,13 @@ function buildConfig() {
       italic:          v('f-italic').checked,
       shadowEnable:    v('f-shadowEnable').checked,
       shadowOffset:    parseFloat(v('f-shOff').value),
+      lineHeightRatio: parseFloat(v('f-lhr').value),
       titleBgEnable:   v('f-bgEnable').checked,
       titleBgColor:    v('f-bgc').value,
       titleBgOpacity:  parseFloat(v('f-bgo').value),
       titleBgOffsetYRatio: parseFloat(v('f-bgoy').value),
-      titleBgPaddingRatio: parseFloat(v('f-bgp').value),
+      titleBgPaddingXRatio: parseFloat(v('f-bgpx').value),
+      titleBgPaddingYRatio: parseFloat(v('f-bgpy').value),
       titleBgRadius:   parseFloat(v('f-bgr').value)
     },
     watermark: {
@@ -1306,16 +1401,53 @@ async function saveConfig() {
 }
 
 async function reloadConfig() {
-  if (!confirm('將捨棄目前的變更並重新讀取 config.json，確定嗎？')) return;
-  try {
-    const res = await fetch('/reload');
-    const data = await res.json();
-    config = data;
-    populateFields();
-    renderPreview();
-    showToast('🔄 設定已重設', false);
-  } catch(e) { showToast('❌ 載入失敗：' + e.message, true); }
+  showCDialog('↩️', '還原已儲存設定', '將捨棄目前未儲存的變更，並從 config.json 重新讀取，確定嗎？', async () => {
+    try {
+      const res = await fetch('/reload');
+      const data = await res.json();
+      config = data;
+      populateFields();
+      renderPreview();
+      showToast('↩️ 已還原為已儲存的設定', false);
+    } catch(e) { showToast('❌ 載入失敗：' + e.message, true); }
+  });
 }
+
+async function resetToDefaults() {
+  showCDialog('⚠️', '重設為預設值', '將以 config.default.json 覆蓋 config.json，此操作無法復原，確定嗎？', async () => {
+    try {
+      const defRes = await fetch('/load-default');
+      if (!defRes.ok) { showToast('❌ 無法讀取 config.default.json', true); return; }
+      const defaultConfig = await defRes.json();
+      const saveRes = await fetch('/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(defaultConfig) });
+      const data = await saveRes.json();
+      if (data.ok) {
+        config = defaultConfig;
+        populateFields();
+        renderPreview();
+        showToast('✅ 已從 config.default.json 還原並儲存', false);
+      } else {
+        showToast('❌ 儲存失敗：' + data.error, true);
+      }
+    } catch(e) { showToast('❌ 網路錯誤：' + e.message, true); }
+  });
+}
+
+let _cdialogCallback = null;
+function showCDialog(icon, title, msg, onConfirm) {
+  v('cdialog-icon').textContent    = icon;
+  v('cdialog-title').textContent   = title;
+  v('cdialog-msg').textContent     = msg;
+  _cdialogCallback = onConfirm;
+  v('cdialog-confirm').onclick = () => { closeCDialog(); onConfirm && onConfirm(); };
+  v('cdialog-overlay').classList.add('open');
+}
+function closeCDialog() {
+  v('cdialog-overlay').classList.remove('open');
+  _cdialogCallback = null;
+}
+// Close on backdrop click
+v('cdialog-overlay').addEventListener('click', e => { if (e.target === v('cdialog-overlay')) closeCDialog(); });
 
 function showToast(msg, isErr) {
   const t = v('toast');
@@ -1349,6 +1481,14 @@ const server = http.createServer(async (req, res) => {
   } else if (req.method === 'GET' && req.url === '/reload') {
     try {
       const config = fs.readFileSync(CONFIG_PATH, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(config);
+    } catch (e) {
+      res.writeHead(500); res.end(JSON.stringify({ error: e.message }));
+    }
+  } else if (req.method === 'GET' && req.url === '/load-default') {
+    try {
+      const config = fs.readFileSync(DEFAULT_CONFIG_PATH, 'utf8');
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(config);
     } catch (e) {

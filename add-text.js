@@ -44,7 +44,7 @@ async function processSingleImage(inputPath, outputPath) {
     
     const fontSize   = Math.floor(width * layout.fontSizeRatio);
     const padding    = Math.floor(width * layout.paddingRatio);
-    const lineHeight = fontSize * 1.4;
+    const lineHeight = fontSize * (layout.lineHeightRatio ?? 1.4);
     const lines      = wrapText(title, layout.maxCharsPerLine);
     const fontWeight = layout.bold   ? 'bold'   : 'normal';
     const fontStyle  = layout.italic ? 'italic' : 'normal';
@@ -54,7 +54,8 @@ async function processSingleImage(inputPath, outputPath) {
     const titleBgColor    = layout.titleBgColor || 'rgba(0,0,0,0.5)';
     const titleBgOpacity  = layout.titleBgOpacity ?? 0.5;
     const titleBgOffsetY  = layout.titleBgOffsetYRatio ?? 0.0;
-    const titleBgPadding  = fontSize * (layout.titleBgPaddingRatio || 0.2);
+    const titleBgPaddingX = fontSize * (layout.titleBgPaddingXRatio ?? (layout.titleBgPaddingRatio ?? 0));
+    const titleBgPaddingY = fontSize * (layout.titleBgPaddingYRatio ?? (layout.titleBgPaddingRatio ?? 0));
     const titleBgRadius   = layout.titleBgRadius || 0;
     
     // 陰影參數
@@ -89,17 +90,15 @@ async function processSingleImage(inputPath, outputPath) {
     if (titleBgEnable) {
       bgRects = lines.map((l, i) => {
         const lineW = l.width * fontSize;
-        const rectW = lineW + titleBgPadding * 2;
-        const rectH = fontSize * 1.35; // 稍微增加一點高度
-        let rectX = xPos - titleBgPadding;
-        if (align === 'center') rectX = xPos - (lineW / 2) - titleBgPadding;
-        else if (align === 'right') rectX = xPos - lineW - titleBgPadding;
+        const rectW = Math.max(1, lineW + titleBgPaddingX * 2);
+        const baseRectH = fontSize * 1.35;
+        const finalRectH = Math.max(1, baseRectH + titleBgPaddingY * 2);
+        let rectX = xPos - titleBgPaddingX;
+        if (align === 'center') rectX = xPos - (lineW / 2) - titleBgPaddingX;
+        else if (align === 'right') rectX = xPos - lineW - titleBgPaddingX;
         
         const yPos = height - padding - (lines.length - 1 - i) * lineHeight;
-        // 修正 yPos 令文字視覺置中。-1.06x 可平衡大部分中文字體的垂直高度感。
-        // 加入 titleBgOffsetY 讓使用者能手動微調垂直校準。
-        const rectY = yPos - fontSize * (1.07 + titleBgOffsetY) - titleBgPadding;
-        const finalRectH = rectH + titleBgPadding * 2;
+        const rectY = yPos - fontSize * (1.07 + titleBgOffsetY) - titleBgPaddingY;
         
         return `<rect x="${rectX}" y="${rectY}" width="${rectW}" height="${finalRectH}" fill="${titleBgColor}" fill-opacity="${titleBgOpacity}" rx="${titleBgRadius}" ry="${titleBgRadius}" />`;
       }).join('');
