@@ -215,8 +215,10 @@ node editor-server.js
 | titleBgColor             | 標題背景顏色（支援 hex, rgb, rgba）          |
 | titleBgOpacity           | 標題背景透明度（0.0 ~ 1.0）                  |
 | titleBgOffsetYRatio      | 標題背景垂直偏移微調（正值向上）             |
-| titleBgPaddingRatio      | 標題背景向外擴張的內距比例                   |
+| titleBgPaddingXRatio     | 標題背景水平向外擴張的內距比例               |
+| titleBgPaddingYRatio     | 標題背景垂直向外擴張的內距比例               |
 | titleBgRadius            | 標題背景矩形的圓角大小                       |
+| lineHeightRatio          | 行高倍數（行高 = 字級 × 倍數，建議 1.2～2.0） |
 | useAutoLuminance         | 是否啟用自動亮度偵測                         |
 | forceTextColor           | 強制文字顏色（停用自動亮度時生效）           |
 | forceShadowColor         | 強制陰影顏色                                 |
@@ -227,6 +229,7 @@ node editor-server.js
 | watermark.bottomRatio    | 浮水印垂直位置（佔圖片高度比例，從底部算起） |
 | watermark.position.right | 浮水印靠右（true）或靠左（false）            |
 | forceJpg                 | 強制將所有輸出圖片轉換為 `.jpg` 格式（預設開啟） |
+| jpegQuality              | JPEG 輸出品質（1 ～ 100，預設 90）            |
 | inputDir                 | 來源圖片資料夾路徑                           |
 | outputDir                | 輸出圖片資料夾路徑                           |
 
@@ -242,50 +245,53 @@ node editor-server.js
 
 ```jsonc
 {
-  "forceJpg": true, // true = 所有輸出統一轉為 .jpg；false = 保留原始副檔名
+  "forceJpg": true,       // true = 所有輸出統一轉為 .jpg；false = 保留原始副檔名
+  "jpegQuality": 90,      // JPEG 輸出品質（1 ~ 100），僅在輸出 .jpg 時生效
   "paths": {
-    "inputDir": "./raw_images", // 原始圖片來源資料夾
-    "outputDir": "./final_posts", // 輸出圖片目標資料夾
+    "inputDir": "./raw_images",  // 原始圖片來源資料夾
+    "outputDir": "./final_posts" // 輸出圖片目標資料夾
   },
-  "title": "讓 AI 封面圖自動加上中文標題", // 疊加在圖片上的標題文字
-  "align": "center", // 文字對齊：center | left | right
+  "title": "封面標題文字", // 疊加在圖片上的標題文字
+  "align": "center",       // 文字對齊：center | left | right
   "fontFamily": [
     // 字型優先順序（陣列，依序 Fallback）
     "PingFang TC",
     "Noto Sans TC",
     "Microsoft JhengHei",
-    "sans-serif",
+    "sans-serif"
   ],
   "customColors": {
-    "useAutoLuminance": true, // true = 自動依圖片亮度決定文字顏色
-    "forceTextColor": "#ffffff", // 停用自動亮度時的強制文字顏色
-    "forceShadowColor": "rgba(0,0,0,0.5)", // 停用自動亮度時的強制陰影顏色
+    "useAutoLuminance": true,              // true = 自動依圖片亮度決定文字顏色
+    "forceTextColor": "#ffffff",           // 停用自動亮度時的強制文字顏色
+    "forceShadowColor": "rgba(0,0,0,0.5)" // 停用自動亮度時的強制陰影顏色
   },
   "layout": {
-    "maxCharsPerLine": 15, // 每行最大字元數（中文字計1，英文字元計0.55）
-    "fontSizeRatio": 0.055, // 字級 = 圖片寬度 × fontSizeRatio
-    "paddingRatio": 0.06, // 邊距 = 圖片寬度 × paddingRatio
-    "bold": false, // 是否啟用粗體
-    "italic": false, // 是否啟用斜體
-    "shadowEnable": true, // 是否啟用文字陰影
-    "shadowOffset": 2, // 陰影偏移像素值
-    "titleBgEnable": true, // 是否顯示標題背景色塊
-    "titleBgColor": "#c9c5c5", // 標題背景顏色
-    "titleBgOpacity": 0.5, // 標題背景透明度 (0.0 ~ 1.0)
-    "titleBgOffsetYRatio": 0.0, // 垂直偏移微調 (正值向上，負值向下)
-    "titleBgPaddingRatio": 0.2, // 背景向外擴張內距 (相對於字級)
-    "titleBgRadius": 8 // 背景圓角像素值
+    "maxCharsPerLine": 9,       // 每行最大字元數（中文字計1，英文字元計0.55）
+    "fontSizeRatio": 0.1,       // 字級 = 圖片寬度 × fontSizeRatio
+    "paddingRatio": 0.07,       // 邊距 = 圖片寬度 × paddingRatio
+    "bold": false,              // 是否啟用粗體
+    "italic": false,            // 是否啟用斜體
+    "shadowEnable": true,       // 是否啟用文字陰影
+    "shadowOffset": 4,          // 陰影偏移像素值
+    "lineHeightRatio": 1.4,     // 行高倍數（行高 = 字級 × 倍數，建議 1.2～2.0）
+    "titleBgEnable": false,     // 是否顯示標題背景色塊
+    "titleBgColor": "#000000",  // 標題背景顏色
+    "titleBgOpacity": 0.4,      // 標題背景透明度 (0.0 ~ 1.0)
+    "titleBgOffsetYRatio": 0,   // 垂直偏移微調 (正值向上，負值向下)
+    "titleBgPaddingXRatio": 0.2,// 背景水平向外擴張內距（相對於字級，負值可使背景窄於文字）
+    "titleBgPaddingYRatio": 0.1,// 背景垂直向外擴張內距（負值可使背景矮於文字）
+    "titleBgRadius": 10         // 背景圓角像素值
   },
   "watermark": {
-    "enable": true, // 是否顯示浮水印
-    "text": "Max的每一天", // 浮水印文字
-    "fontSizeRatio": 0.01, // 浮水印字級比例
-    "opacity": 0.1, // 浮水印透明度（0.0 ~ 1.0）
+    "enable": false,            // 是否顯示浮水印
+    "text": "",                 // 浮水印文字
+    "fontSizeRatio": 0.012,     // 浮水印字級比例
+    "opacity": 0.15,            // 浮水印透明度（0.0 ~ 1.0）
     "position": {
-      "right": true, // true = 靠右，false = 靠左
-      "bottomRatio": 0.9, // 距底部的高度比例（0.9 表示距底部 90% 處）
-    },
-  },
+      "right": true,            // true = 靠右，false = 靠左
+      "bottomRatio": 0.9        // 距底部的高度比例（0.9 表示距底部 90% 處）
+    }
+  }
 }
 ```
 
@@ -295,13 +301,14 @@ node editor-server.js
 
 ```
 text-ai-cover/
-├── add-text.js        # 核心批次處理程式
-├── editor-server.js   # 視覺化設定編輯器後端伺服器
-├── edit-config.bat    # 一鍵啟動視覺化編輯器（Windows）
-├── config.json        # 所有可調整參數設定檔
+├── add-text.js           # 核心批次處理程式
+├── editor-server.js      # 視覺化設定編輯器後端伺服器
+├── edit-config.bat       # 一鍵啟動視覺化編輯器（Windows）
+├── config.json           # 所有可調整參數設定檔
+├── config.default.json   # 預設參數（還原用）
 ├── package.json
-├── raw_images/        # 📥 原始圖片放置於此
-└── final_posts/       # 📤 處理後圖片輸出於此
+├── raw_images/           # 📥 原始圖片放置於此
+└── final_posts/          # 📤 處理後圖片輸出於此
 ```
 
 ---
